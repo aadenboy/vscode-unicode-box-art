@@ -1,0 +1,62 @@
+{
+  "name": "box-art-draw",
+  "displayName": "Unicode Box Art Drawing",
+  "description": "Allows drawing Unicode box art with the arrow keys. Based on https://github.com/MarkLodato/js-boxdrawing",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^0.0.1"
+  },
+  "icon": "icon.png",
+  "categories": [
+    "Other"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:extension.toggleDrawingMode"
+  ],
+  "contributes": {
+    "commands": [
+        { "command": "extension.toggleDrawingMode",  "title": "Toggle Drawing Mode" },
+        { "command": "extension.showDrawingOptions", "title": "Show Drawing Options" },
+        { "command": "extension.normalLineType",     "title": "Normal Line" },
+        { "command": "extension.doubleLineType",     "title": "Double Line" },
+        { "command": "extension.boldLineType",       "title": "Bold Line" },
+        { "command": "extension.eraseLineType",      "title": "Eraser" }
+    ],
+    "keybindings": [
+        { "command": "extension.toggleDrawingMode", "key": "ctrl+shift+insert", "when": "editorTextFocus" },
+        { "command": "extension.moveUp",            "key": "up",                "when": "editorTextFocus && extension.isDrawingMode" },
+        { "command": "extension.moveDown",          "key": "down",              "when": "editorTextFocus && extension.isDrawingMode" },
+        { "command": "extension.moveLeft",          "key": "left",              "when": "editorTextFocus && extension.isDrawingMode" },
+        { "command": "extension.moveRight",         "key": "right",             "when": "editorTextFocus && extension.isDrawingMode" },
+        { "command": "extension.setUp",             "key": "shift+up",          "when": "editorTextFocus && extension.isDrawingMode" },
+        { "command": "extension.setDown",           "key": "shift+down",        "when": "editorTextFocus && extension.isDrawingMode" },
+        { "command": "extension.setLeft",           "key": "shift+left",        "when": "editorTextFocus && extension.isDrawingMode" },
+        { "command": "extension.setRight",          "key": "shift+right",       "when": "editorTextFocus && extension.isDrawingMode" },
+        { "command": "extension.normalLineType",    "key": "ctrl+shift+n",      "when": "editorTextFocus && extension.isDrawingMode" },
+        { "command": "extension.doubleLineType",    "key": "ctrl+shift+k",      "when": "editorTextFocus && extension.isDrawingMode" },
+        { "command": "extension.boldLineType",      "key": "ctrl+shift+b",      "when": "editorTextFocus && extension.isDrawingMode" },
+        { "command": "extension.eraseLineType",     "key": "ctrl+shift+delete", "when": "editorTextFocus && extension.isDrawingMode" }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.95.0",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "18.x",
+    "@typescript-eslint/eslint-plugin": "^6.13.1",
+    "@typescript-eslint/parser": "^6.13.1",
+    "eslint": "^8.54.0",
+    "typescript": "^5.3.2",
+    "@vscode/test-cli": "^0.0.4",
+    "@vscode/test-electron": "^2.3.8"
+  }
+}
