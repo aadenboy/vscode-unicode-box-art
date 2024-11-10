@@ -3,7 +3,7 @@
   "displayName": "Unicode Box Art Drawing",
   "description": "Allows drawing Unicode box art with the arrow keys. Based on https://github.com/MarkLodato/js-boxdrawing",
   "version": "0.0.1",
-  "publisher": "your-publisher-id",
+  "publisher": "aadenboy",
   "engines": {
     "vscode": "^1.56.0"
   },
