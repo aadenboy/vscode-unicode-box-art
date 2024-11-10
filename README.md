@@ -1,6 +1,7 @@
 # Unicode Box Art Draw
 
 ![Title Animation](bd.gif)
+
 This extension lets you draw with Unicode's box art characters directly in VSCode!
 
 > Based on [MarkLodato/js-boxdrawing](https://github.com/MarkLodato/js-boxdrawing)
