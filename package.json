@@ -3,13 +3,18 @@
   "displayName": "Unicode Box Art Drawing",
   "description": "Allows drawing Unicode box art with the arrow keys. Based on https://github.com/MarkLodato/js-boxdrawing",
   "version": "0.0.1",
+  "publisher": "your-publisher-id",
   "engines": {
-    "vscode": "^0.0.1"
+    "vscode": "^1.56.0"
   },
   "icon": "icon.png",
   "categories": [
     "Other"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aadenboy/vscode-unicode-box-art.git"
+  },
   "main": "./out/extension.js",
   "activationEvents": [
     "onStartupFinished",
@@ -49,7 +54,7 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.95.0",
+    "@types/vscode": "^1.56.0",
     "@types/mocha": "^10.0.6",
     "@types/node": "18.x",
     "@typescript-eslint/eslint-plugin": "^6.13.1",

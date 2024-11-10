@@ -31,3 +31,6 @@ All keybinds, excluding the toggle command, are active only while drawing mode i
 1. Open the Extensions view in VS Code (`Ctrl+Shift+X`)
 2. Search for **"Unicode Box Art Drawing"** and install it
 3. Start drawing by toggling drawing mode with `Ctrl+Shift+Insert`!
+
+## Source Code
+You can view and contribute to the source code at [GitHub Repo](https://github.com/aadenboy/vscode-unicode-box-art).
