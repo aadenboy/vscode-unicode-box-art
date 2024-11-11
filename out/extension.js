@@ -40,6 +40,7 @@ var lineType;
 exports.isDrawingMode = false;
 let currentLineType = 0;
 let statusBarItem = null;
+let isUpdating = false;
 function activate(context) {
     const toggleModeDisposable = vscode.commands.registerCommand('extension.toggleDrawingMode', () => {
         exports.isDrawingMode = !exports.isDrawingMode;
@@ -63,16 +64,16 @@ function activate(context) {
         updateStatusBar();
     });
     const moveUpDisposable = vscode.commands.registerCommand('extension.moveUp', () => {
-        handleMove('up');
+        handleMove(-1, 0, 'up');
     });
     const moveDownDisposable = vscode.commands.registerCommand('extension.moveDown', () => {
-        handleMove('down');
+        handleMove(1, 0, 'down');
     });
     const moveLeftDisposable = vscode.commands.registerCommand('extension.moveLeft', () => {
-        handleMove('left');
+        handleMove(0, -1, 'left');
     });
     const moveRightDisposable = vscode.commands.registerCommand('extension.moveRight', () => {
-        handleMove('right');
+        handleMove(0, 1, 'right');
     });
     const setUpDisposable = vscode.commands.registerCommand('extension.setUp', () => {
         handleSet('up');
@@ -86,7 +87,13 @@ function activate(context) {
     const setRightDisposable = vscode.commands.registerCommand('extension.setRight', () => {
         handleSet('right');
     });
-    context.subscriptions.push(toggleModeDisposable, moveUpDisposable, moveDownDisposable, moveLeftDisposable, moveRightDisposable, normalLineDisposable, doubleLineDisposable, boldLineDisposable, eraseLineDisposable, setUpDisposable, setDownDisposable, setLeftDisposable, setRightDisposable);
+    const handleCursorMove = (event) => {
+        if (!isUpdating && exports.isDrawingMode) {
+            cursorSelectify(0, 0);
+        }
+        updateStatusBar();
+    };
+    const cursorMoveDisposable = vscode.window.onDidChangeTextEditorSelection(handleCursorMove);
     initializeStatusBar();
     updateStatusBar();
     if (statusBarItem) {
@@ -95,200 +102,146 @@ function activate(context) {
     const showDrawingOptions = vscode.commands.registerCommand('extension.showDrawingOptions', () => {
         quickPickMenu();
     });
+    context.subscriptions.push(toggleModeDisposable, moveUpDisposable, moveDownDisposable, moveLeftDisposable, moveRightDisposable, normalLineDisposable, doubleLineDisposable, boldLineDisposable, eraseLineDisposable, setUpDisposable, setDownDisposable, setLeftDisposable, setRightDisposable, cursorMoveDisposable, showDrawingOptions);
 }
-function handleMove(direction) {
+function cursorSelectify(dx, dy) {
     const editor = vscode.window.activeTextEditor;
     if (!editor)
         return;
-    const position = editor.selection.active;
-    const newPosition = getNewPosition(position, direction);
-    const currentChar = character(editor, position);
-    const newChar = character(editor, newPosition);
-    editor.selection = new vscode.Selection(newPosition.translate(0, 1), newPosition);
-    insertBoxLine(editor, position, newPosition, direction, currentChar, newChar);
+    isUpdating = true;
+    const updatedSelections = editor.selections.map((cursor) => {
+        const position = cursor.active;
+        return new vscode.Selection(position.translate(0 + dx, 1 + dy), position.translate(dx, dy));
+    });
+    editor.selections = updatedSelections;
+    setTimeout(() => { isUpdating = false; }, 5);
+}
+function handleMove(dx, dy, direction) {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor)
+        return;
+    editor.edit((editBuilder) => {
+        editor.selections.map((cursor) => {
+            const position = cursor.active;
+            const newPosition = position.translate(dx, dy);
+            const currentChar = character(editor, position);
+            const newChar = character(editor, newPosition);
+            insertBoxLine(editBuilder, position, newPosition, direction, currentChar, newChar);
+        });
+    });
+    cursorSelectify(dx, dy);
 }
 function handleSet(direction) {
     const editor = vscode.window.activeTextEditor;
     if (!editor)
         return;
-    const position = editor.selection.active;
-    const currentChar = character(editor, position);
-    editor.selection = new vscode.Selection(position.translate(0, 1), position);
-    modifyBoxLine(editor, position, direction, currentChar);
-}
-function getNewPosition(position, direction) {
-    switch (direction) {
-        case 'up': return position.with(position.line - 1, position.character);
-        case 'down': return position.with(position.line + 1, position.character);
-        case 'left': return position.with(position.line, position.character - 1);
-        case 'right': return position.with(position.line, position.character + 1);
-    }
+    editor.edit((editBuilder) => {
+        editor.selections.map((cursor, index) => {
+            const position = cursor.active;
+            const currentChar = character(editor, position);
+            modifyBoxLine(editBuilder, position, direction, currentChar);
+        });
+    });
+    cursorSelectify(0, 0);
 }
 const charmaps_json_1 = __importDefault(require("./charmaps.json"));
 let last = new vscode.Position(0, 0);
 let dir = "up";
-function insertBoxLine(editor, position, newPosition, direction, currentChar, newChar) {
-    let curLine, newLine;
-    editor.edit(editBuilder => {
-        function replaceChar(position, newChar) {
-            const range = new vscode.Range(position, position.translate(0, 1)); // Range for one character
-            editBuilder.replace(range, newChar);
+function insertBoxLine(editBuilder, position, newPosition, direction, currentChar, newChar) {
+    function replaceChar(position, newChar) {
+        const range = new vscode.Range(position, position.translate(0, 1)); // Range for one character
+        editBuilder.replace(range, newChar);
+    }
+    function mapcase(repset, dirFrom, dirTo, missingFrom, missingTo, newDir) {
+        let curLine = dirFrom[currentChar];
+        let newLine = dirTo[newChar];
+        // uhhh. ignore the weird syntaxing it just arose naturally
+        if (last.compareTo(position) == 0) {
+            replaceChar(position, repset[dir][currentLineType]);
         }
-        switch (direction) {
-            case 'up':
-                curLine = charmaps_json_1.default.down[currentChar];
-                newLine = charmaps_json_1.default.up[newChar];
-                if (last.compareTo(position) == 0 && currentLineType == lineType.double) {
-                    replaceChar(position, {
-                        "up": "║",
-                        "down": "║",
-                        "left": "╚",
-                        "right": "╝"
-                    }[dir]);
-                }
-                else {
-                    replaceChar(position, (curLine || ["╵", " ", "╹", " "])[currentLineType]);
-                }
-                if (newLine == null) {
-                    last = newPosition;
-                    dir = 'up';
-                }
-                replaceChar(newPosition, (newLine || ["╷", "║", "╻", " "])[currentLineType]);
-                break;
-            case 'down':
-                curLine = charmaps_json_1.default.up[currentChar];
-                newLine = charmaps_json_1.default.down[newChar];
-                if (last.compareTo(position) == 0 && currentLineType == lineType.double) {
-                    replaceChar(position, {
-                        "up": "║",
-                        "down": "║",
-                        "left": "╔",
-                        "right": "╗"
-                    }[dir]);
-                }
-                else {
-                    replaceChar(position, (curLine || ["╷", " ", "╻", " "])[currentLineType]);
-                }
-                if (newLine == null) {
-                    last = newPosition;
-                    dir = 'down';
-                }
-                replaceChar(newPosition, (newLine || ["╵", "║", "╹", " "])[currentLineType]);
-                break;
-            case 'left':
-                curLine = charmaps_json_1.default.right[currentChar];
-                newLine = charmaps_json_1.default.left[newChar];
-                if (last.compareTo(position) == 0 && currentLineType == lineType.double) {
-                    replaceChar(position, {
-                        "up": "╗",
-                        "down": "╝",
-                        "left": "═",
-                        "right": "═"
-                    }[dir]);
-                }
-                else {
-                    replaceChar(position, (curLine || ["╴", " ", "╸", " "])[currentLineType]);
-                }
-                if (newLine == null) {
-                    last = newPosition;
-                    dir = 'left';
-                }
-                replaceChar(newPosition, (newLine || ["╶", "═", "╺", " "])[currentLineType]);
-                break;
-            case 'right':
-                curLine = charmaps_json_1.default.left[currentChar];
-                newLine = charmaps_json_1.default.right[newChar];
-                if (last.compareTo(position) == 0 && currentLineType == lineType.double) {
-                    replaceChar(position, {
-                        "up": "╔",
-                        "down": "╚",
-                        "left": "═",
-                        "right": "═"
-                    }[dir]);
-                }
-                else {
-                    replaceChar(position, (curLine || ["╶", " ", "╺", " "])[currentLineType]);
-                }
-                if (newLine == null) {
-                    last = newPosition;
-                    dir = 'right';
-                }
-                replaceChar(newPosition, (newLine || ["╴", "═", "╸", " "])[currentLineType]);
-                break;
+        else {
+            replaceChar(position, (curLine || missingFrom)[currentLineType]);
         }
-    });
+        if (newLine == null && currentLineType == lineType.double) {
+            last = newPosition;
+            dir = newDir;
+        }
+        else {
+            last = new vscode.Position(0, 0);
+        }
+        replaceChar(newPosition, (newLine || missingTo)[currentLineType]);
+    }
+    switch (direction) {
+        case 'up':
+            mapcase({
+                "up": ["║", "║", "║", "║"],
+                "down": ["║", "║", "║", " "],
+                "left": ["╘", "╚", "╘", "═"],
+                "right": ["╜", "╝", "╜", "═"]
+            }, charmaps_json_1.default.down, charmaps_json_1.default.up, ["╵", " ", "╹", " "], ["╷", "║", "╻", " "], 'up');
+            break;
+        case 'down':
+            mapcase({
+                "up": ["║", "║", "║", " "],
+                "down": ["║", "║", "║", "║"],
+                "left": ["╒", "╔", "╒", "═"],
+                "right": ["╕", "╗", "╕", "═"]
+            }, charmaps_json_1.default.up, charmaps_json_1.default.down, ["╷", " ", "╻", " "], ["╵", "║", "╹", " "], 'down');
+            break;
+        case 'left':
+            mapcase({
+                "up": ["╖", "╗", "╖", "║"],
+                "down": ["╜", "╝", "╜", "║"],
+                "left": ["═", "═", "═", "═"],
+                "right": ["═", "═", "═", " "]
+            }, charmaps_json_1.default.right, charmaps_json_1.default.left, ["╴", " ", "╸", " "], ["╶", "═", "╺", " "], 'left');
+            break;
+        case 'right':
+            mapcase({
+                "up": ["╓", "╔", "╓", "║"],
+                "down": ["╙", "╚", "╙", "║"],
+                "left": ["═", "═", "═", " "],
+                "right": ["═", "═", "═", "═"]
+            }, charmaps_json_1.default.left, charmaps_json_1.default.right, ["╶", " ", "╺", " "], ["╴", "═", "╸", " "], 'right');
+            break;
+    }
 }
-function modifyBoxLine(editor, position, direction, currentChar) {
+function modifyBoxLine(editBuilder, position, direction, currentChar) {
     let newLine;
-    editor.edit(editBuilder => {
-        function replaceChar(position, newChar) {
-            const range = new vscode.Range(position, position.translate(0, 1)); // Range for one character
-            editBuilder.replace(range, newChar);
+    function replaceChar(position, newChar) {
+        const range = new vscode.Range(position, position.translate(0, 1)); // Range for one character
+        editBuilder.replace(range, newChar);
+    }
+    last = new vscode.Position(0, 0);
+    function mapcase(dir, missing) {
+        newLine = dir[currentChar];
+        if (!newLine) {
+            replaceChar(position, missing[currentLineType]);
+            return;
         }
-        last = new vscode.Position(0, 0);
-        switch (direction) {
-            case 'up':
-                newLine = charmaps_json_1.default.down[currentChar];
-                if (!newLine) {
-                    replaceChar(position, ["╵", "║", "╹", " "][currentLineType]);
-                    break;
-                }
-                if (newLine[currentLineType] == currentChar) {
-                    newLine = charmaps_json_1.default.down[currentChar][3];
-                }
-                else {
-                    newLine = newLine[currentLineType];
-                }
-                ;
-                replaceChar(position, newLine);
-                break;
-            case 'down':
-                newLine = charmaps_json_1.default.up[currentChar];
-                if (!newLine) {
-                    replaceChar(position, ["╷", "║", "╻", " "][currentLineType]);
-                    break;
-                }
-                if (newLine[currentLineType] == currentChar) {
-                    newLine = charmaps_json_1.default.up[currentChar][3];
-                }
-                else {
-                    newLine = newLine[currentLineType];
-                }
-                ;
-                replaceChar(position, newLine);
-                break;
-            case 'left':
-                newLine = charmaps_json_1.default.right[currentChar];
-                if (!newLine) {
-                    replaceChar(position, ["╴", "═", "╸", " "][currentLineType]);
-                    break;
-                }
-                if (newLine[currentLineType] == currentChar) {
-                    newLine = charmaps_json_1.default.right[currentChar][3];
-                }
-                else {
-                    newLine = newLine[currentLineType];
-                }
-                ;
-                replaceChar(position, newLine);
-                break;
-            case 'right':
-                newLine = charmaps_json_1.default.left[currentChar];
-                if (!newLine) {
-                    replaceChar(position, ["╶", "═", "╺", " "][currentLineType]);
-                    break;
-                }
-                if (newLine[currentLineType] == currentChar) {
-                    newLine = charmaps_json_1.default.left[currentChar][3];
-                }
-                else {
-                    newLine = newLine[currentLineType];
-                }
-                ;
-                replaceChar(position, newLine);
-                break;
+        if (newLine[currentLineType] == currentChar) {
+            newLine = dir[currentChar][3];
         }
-    });
+        else {
+            newLine = newLine[currentLineType];
+        }
+        ;
+        replaceChar(position, newLine);
+    }
+    switch (direction) {
+        case 'up':
+            mapcase(charmaps_json_1.default.down, ["╵", "║", "╹", " "]);
+            break;
+        case 'down':
+            mapcase(charmaps_json_1.default.up, ["╷", "║", "╻", " "]);
+            break;
+        case 'left':
+            mapcase(charmaps_json_1.default.right, ["╴", "═", "╸", " "]);
+            break;
+        case 'right':
+            mapcase(charmaps_json_1.default.left, ["╶", "═", "╺", " "]);
+            break;
+    }
 }
 function character(editor, position) {
     const range = new vscode.Range(position, position.translate(0, 1));
