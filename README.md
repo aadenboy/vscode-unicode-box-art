@@ -7,6 +7,7 @@
 ) ![Installs](https://img.shields.io/visual-studio-marketplace/i/aadenboy.box-art-draw
 )
 
+*(Footage sped up for demonstration purposes)*
 ![Title Animation](./gallery/bd.gif)
 
 This extension lets you draw with Unicode's box art characters directly in VSCode!
