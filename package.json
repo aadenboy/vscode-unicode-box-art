@@ -2,7 +2,7 @@
   "name": "box-art-draw",
   "displayName": "Unicode Box Art Drawing",
   "description": "Allows drawing Unicode box art with the arrow keys. Based on https://github.com/MarkLodato/js-boxdrawing",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "publisher": "aadenboy",
   "engines": {
     "vscode": "^1.56.0"
@@ -27,22 +27,55 @@
         { "command": "extension.normalLineType",     "title": "Normal Line" },
         { "command": "extension.doubleLineType",     "title": "Double Line" },
         { "command": "extension.boldLineType",       "title": "Bold Line" },
-        { "command": "extension.eraseLineType",      "title": "Eraser" }
+        { "command": "extension.eraseLineType",      "title": "Eraser" },
+        { "command": "extension.paintLine",          "title": "Paint Line" },
+        { "command": "extension.paintCurve",         "title": "Paint Curve" },
+        { "command": "extension.paintShape",         "title": "Paint Shape" },
+        { "command": "extension.paintBranch",        "title": "Paint Branch" }
     ],
     "keybindings": [
-        { "command": "extension.toggleDrawingMode", "key": "ctrl+shift+insert", "when": "editorTextFocus" },
-        { "command": "extension.moveUp",            "key": "up",                "when": "editorTextFocus && extension.isDrawingMode" },
-        { "command": "extension.moveDown",          "key": "down",              "when": "editorTextFocus && extension.isDrawingMode" },
-        { "command": "extension.moveLeft",          "key": "left",              "when": "editorTextFocus && extension.isDrawingMode" },
-        { "command": "extension.moveRight",         "key": "right",             "when": "editorTextFocus && extension.isDrawingMode" },
-        { "command": "extension.setUp",             "key": "shift+up",          "when": "editorTextFocus && extension.isDrawingMode" },
-        { "command": "extension.setDown",           "key": "shift+down",        "when": "editorTextFocus && extension.isDrawingMode" },
-        { "command": "extension.setLeft",           "key": "shift+left",        "when": "editorTextFocus && extension.isDrawingMode" },
-        { "command": "extension.setRight",          "key": "shift+right",       "when": "editorTextFocus && extension.isDrawingMode" },
-        { "command": "extension.normalLineType",    "key": "ctrl+shift+n",      "when": "editorTextFocus && extension.isDrawingMode" },
-        { "command": "extension.doubleLineType",    "key": "ctrl+shift+k",      "when": "editorTextFocus && extension.isDrawingMode" },
-        { "command": "extension.boldLineType",      "key": "ctrl+shift+b",      "when": "editorTextFocus && extension.isDrawingMode" },
-        { "command": "extension.eraseLineType",     "key": "ctrl+shift+delete", "when": "editorTextFocus && extension.isDrawingMode" }
+      { "command": "extension.toggleDrawingMode",  "key": "ctrl+shift+insert",     "when": "editorTextFocus" },
+      { "command": "extension.showDrawingOptions", "key": "ctrl+shift+\\",         "when": "editorTextFocus" },
+    
+      { "command": "extension.moveUp",             "key": "up",                    "when": "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.moveDown",           "key": "down",                  "when": "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.moveLeft",           "key": "left",                  "when": "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.moveRight",          "key": "right",                 "when": "editorTextFocus && extension.isDrawing" },
+          
+      { "command": "extension.movePaintUp",        "key": "alt+up",                "when": "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.movePaintDown",      "key": "alt+down",              "when": "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.movePaintLeft",      "key": "alt+left",              "when": "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.movePaintRight",     "key": "alt+right",             "when": "editorTextFocus && extension.isDrawing" },
+          
+      { "command": "extension.setUp",              "key": "shift+up",              "when": "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.setDown",            "key": "shift+down",            "when": "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.setLeft",            "key": "shift+left",            "when": "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.setRight",           "key": "shift+right",           "when": "editorTextFocus && extension.isDrawing" },
+
+      { "command": "extension.flipHorizontal",     "key": "shift+[",               "when": "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.flipVertictal",      "key": "shift+]",               "when": "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.rotateLeft",         "key": "[",                     "when": "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.rotateRight",        "key": "]",                     "when": "editorTextFocus && extension.isDrawing" },
+          
+      { "command": "extension.setPaintUp",         "key": "alt+shift+up",          "when": "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.setPaintDown",       "key": "alt+shift+down",        "when": "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.setPaintLeft",       "key": "alt+shift+left",        "when": "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.setPaintRight",      "key": "alt+shift+right",       "when": "editorTextFocus && extension.isDrawing" },
+          
+      { "command": "extension.normalLineType",     "key": "n",                     "when": "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.doubleLineType",     "key": "k",                     "when": "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.boldLineType",       "key": "b",                     "when": "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.eraseLineType",      "key": "delete",                "when": "editorTextFocus && extension.isDrawing" },
+
+      { "command": "extension.paintLine",          "key": "p",                     "when": "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.paintCurve",         "key": "shift+p",               "when": "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.paintShape",         "key": "ctrl+p",                "when": "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.paintBranch",        "key": "alt+p",                 "when": "editorTextFocus && extension.isDrawing" },
+
+      { "command": "extension.keybindNotif", "key": "ctrl+shift+n",      "when":  "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.keybindNotif", "key": "ctrl+shift+k",      "when":  "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.keybindNotif", "key": "ctrl+shift+b",      "when":  "editorTextFocus && extension.isDrawing" },
+      { "command": "extension.keybindNotif", "key": "ctrl+shift+delete", "when":  "editorTextFocus && extension.isDrawing" }
     ]
   },
   "scripts": {
